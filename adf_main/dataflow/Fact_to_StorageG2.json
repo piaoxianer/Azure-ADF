@@ -1,0 +1,77 @@
+{
+	"name": "Fact_to_StorageG2",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DW_Fact_Purchase",
+						"type": "DatasetReference"
+					},
+					"name": "FactPurchase"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Parquet_Fact_Purchase",
+						"type": "DatasetReference"
+					},
+					"name": "StorageFactPurchase"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedMonth"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          {Purchase Key} as long,",
+				"          {Date Key} as date,",
+				"          {Supplier Key} as integer,",
+				"          {Stock Item Key} as integer,",
+				"          {WWI Purchase Order ID} as integer,",
+				"          {Ordered Outers} as integer,",
+				"          {Ordered Quantity} as integer,",
+				"          {Received Outers} as integer,",
+				"          Package as string,",
+				"          {Is Order Finalized} as boolean,",
+				"          {Lineage Key} as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> FactPurchase",
+				"FactPurchase derive(Month = toString(month({Date Key}))) ~> derivedMonth",
+				"derivedMonth sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          PurchaseKey = {Purchase Key},",
+				"          DateKey = {Date Key},",
+				"          SupplierKey = {Supplier Key},",
+				"          StockItemKey = {Stock Item Key},",
+				"          WWIPurchaseOrderID = {WWI Purchase Order ID},",
+				"          OrderedOuters = {Ordered Outers},",
+				"          OrderedQuantity = {Ordered Quantity},",
+				"          ReceivedOuters = {Received Outers},",
+				"          Package,",
+				"          IsOrderFinalized = {Is Order Finalized},",
+				"          LineageKey = {Lineage Key},",
+				"          Month",
+				"     ),",
+				"     partitionBy('key',",
+				"          0,",
+				"          Month",
+				"     )) ~> StorageFactPurchase"
+			]
+		}
+	}
+}

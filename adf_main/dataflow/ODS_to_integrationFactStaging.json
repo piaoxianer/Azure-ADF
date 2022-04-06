@@ -1,0 +1,245 @@
+{
+	"name": "ODS_to_integrationFactStaging",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "PurchaseOrders",
+						"type": "DatasetReference"
+					},
+					"name": "sourcePurOrders"
+				},
+				{
+					"dataset": {
+						"referenceName": "PurchaseOrderLines",
+						"type": "DatasetReference"
+					},
+					"name": "sourcePurOrderLines"
+				},
+				{
+					"dataset": {
+						"referenceName": "Integration_Supplier_Staging",
+						"type": "DatasetReference"
+					},
+					"name": "sourceSupplierStaging"
+				},
+				{
+					"dataset": {
+						"referenceName": "Intergration_StockItem_Staging",
+						"type": "DatasetReference"
+					},
+					"name": "sourceStockitemStaging"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Integration_Purchase_Staging",
+						"type": "DatasetReference"
+					},
+					"name": "sinkPurchaseStaging"
+				}
+			],
+			"transformations": [
+				{
+					"name": "join1"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "join2"
+				},
+				{
+					"name": "select2"
+				},
+				{
+					"name": "join3"
+				},
+				{
+					"name": "select3"
+				},
+				{
+					"name": "surrogateKey1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          PurchaseOrderID as integer,",
+				"          SupplierID as integer,",
+				"          OrderDate as date,",
+				"          DeliveryMethodID as integer,",
+				"          ContactPersonID as integer,",
+				"          ExpectedDeliveryDate as date,",
+				"          SupplierReference as string,",
+				"          IsOrderFinalized as boolean,",
+				"          Comments as string,",
+				"          InternalComments as string,",
+				"          LastEditedBy as integer,",
+				"          LastEditedWhen as timestamp,",
+				"          ingestTime as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourcePurOrders",
+				"source(output(",
+				"          PurchaseOrderLineID as integer,",
+				"          PurchaseOrderID as integer,",
+				"          StockItemID as integer,",
+				"          OrderedOuters as integer,",
+				"          Description as string,",
+				"          ReceivedOuters as integer,",
+				"          PackageTypeID as integer,",
+				"          ExpectedUnitPricePerOuter as decimal(18,2),",
+				"          LastReceiptDate as date,",
+				"          IsOrderLineFinalized as boolean,",
+				"          LastEditedBy as integer,",
+				"          LastEditedWhen as timestamp,",
+				"          ingestTime as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourcePurOrderLines",
+				"source(output(",
+				"          {Supplier Staging Key} as integer,",
+				"          {WWI Supplier ID} as integer,",
+				"          Supplier as string,",
+				"          Category as string,",
+				"          {Primary Contact} as string,",
+				"          {Supplier Reference} as string,",
+				"          {Payment Days} as integer,",
+				"          {Postal Code} as string,",
+				"          {Valid From} as timestamp,",
+				"          {Valid To} as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourceSupplierStaging",
+				"source(output(",
+				"          {Stock Item Staging Key} as integer,",
+				"          {WWI Stock Item ID} as integer,",
+				"          {Stock Item} as string,",
+				"          Color as string,",
+				"          {Selling Package} as string,",
+				"          {Buying Package} as string,",
+				"          Brand as string,",
+				"          Size as string,",
+				"          {Lead Time Days} as integer,",
+				"          {Quantity Per Outer} as integer,",
+				"          {Is Chiller Stock} as boolean,",
+				"          Barcode as string,",
+				"          {Tax Rate} as decimal(18,3),",
+				"          {Unit Price} as decimal(18,2),",
+				"          {Recommended Retail Price} as decimal(18,2),",
+				"          {Typical Weight Per Unit} as decimal(18,3),",
+				"          Photo as binary,",
+				"          {Valid From} as timestamp,",
+				"          {Valid To} as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourceStockitemStaging",
+				"sourcePurOrders, sourcePurOrderLines join(sourcePurOrders@PurchaseOrderID == sourcePurOrderLines@PurchaseOrderID,",
+				"     joinType:'inner',",
+				"     broadcast: 'auto')~> join1",
+				"join1 select(mapColumn(",
+				"          {WWI Purchase Order ID} = sourcePurOrders@PurchaseOrderID,",
+				"          SupplierID,",
+				"          {Order Date} = OrderDate,",
+				"          {Is Order Finalized} = IsOrderFinalized,",
+				"          {Last Modified When} = sourcePurOrders@LastEditedWhen,",
+				"          StockItemID,",
+				"          {Ordered Outers} = OrderedOuters,",
+				"          {Received Outers} = ReceivedOuters,",
+				"          {Package Type ID} = PackageTypeID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1, sourceSupplierStaging join(SupplierID == {WWI Supplier ID},",
+				"     joinType:'left',",
+				"     broadcast: 'auto')~> join2",
+				"join2 select(mapColumn(",
+				"          {Date Key} = {Order Date},",
+				"          {Supplier Key} = {Supplier Staging Key},",
+				"          {WWI Purchase Order ID},",
+				"          {Last Modified When},",
+				"          StockItemID,",
+				"          {Ordered Outers},",
+				"          {Received Outers},",
+				"          {Package Type ID},",
+				"          {Is Order Finalized},",
+				"          {WWI Supplier ID},",
+				"          Supplier",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select2",
+				"select2, sourceStockitemStaging join(StockItemID == {WWI Stock Item ID},",
+				"     joinType:'left',",
+				"     broadcast: 'auto')~> join3",
+				"join3 select(mapColumn(",
+				"          {Date Key},",
+				"          {Supplier Key},",
+				"          {Stock Item Key} = {Stock Item Staging Key},",
+				"          {WWI Purchase Order ID},",
+				"          {Ordered Outers},",
+				"          {Ordered Quantity} = {Quantity Per Outer},",
+				"          {Received Outers},",
+				"          {Package Type ID},",
+				"          {Is Order Finalized},",
+				"          {WWI Supplier ID},",
+				"          {WWI Stock Item ID}",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select3",
+				"select3 keyGenerate(output({Purchase Staging Key} as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> surrogateKey1",
+				"surrogateKey1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          {Purchase Staging Key} as long,",
+				"          {Date Key} as date,",
+				"          {Supplier Key} as integer,",
+				"          {Stock Item Key} as integer,",
+				"          {WWI Purchase Order ID} as integer,",
+				"          {Ordered Outers} as integer,",
+				"          {Ordered Quantity} as integer,",
+				"          {Received Outers} as integer,",
+				"          Package as string,",
+				"          {Is Order Finalized} as boolean,",
+				"          {WWI Supplier ID} as integer,",
+				"          {WWI Stock Item ID} as integer,",
+				"          {Last Modified When} as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          {Purchase Staging Key},",
+				"          {Date Key},",
+				"          {Supplier Key},",
+				"          {Stock Item Key},",
+				"          {WWI Purchase Order ID},",
+				"          {Ordered Outers},",
+				"          {Ordered Quantity},",
+				"          {Received Outers},",
+				"          Package = {Package Type ID},",
+				"          {Is Order Finalized},",
+				"          {WWI Supplier ID},",
+				"          {WWI Stock Item ID}",
+				"     )) ~> sinkPurchaseStaging"
+			]
+		}
+	}
+}

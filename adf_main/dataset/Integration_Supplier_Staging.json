@@ -1,0 +1,64 @@
+{
+	"name": "Integration_Supplier_Staging",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "wwiDW",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "WWI Supplier ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Supplier",
+				"type": "nvarchar"
+			},
+			{
+				"name": "CategoryID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Primary Contact",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Supplier Reference",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Payment Days",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Postal Code",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ValidFrom",
+				"type": "datetime2",
+				"scale": 7
+			},
+			{
+				"name": "ValidTo",
+				"type": "datetime2",
+				"scale": 7
+			},
+			{
+				"name": "Supplier Key",
+				"type": "bigint",
+				"precision": 19
+			}
+		],
+		"typeProperties": {
+			"schema": "Integration",
+			"table": "Supplier_Staging"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

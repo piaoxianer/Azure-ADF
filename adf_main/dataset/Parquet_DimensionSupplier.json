@@ -1,0 +1,22 @@
+{
+	"name": "Parquet_DimensionSupplier",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage_Purchase",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "Suppliers_Parquet",
+				"folderPath": "DimensionTable/SuppliersFile",
+				"fileSystem": "purchasefile"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

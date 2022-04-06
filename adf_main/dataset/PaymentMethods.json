@@ -1,0 +1,49 @@
+{
+	"name": "PaymentMethods",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDatabase_ODS",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "ODS_forJoining"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "PaymentMethodID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "PaymentMethodName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "LastEditedBy",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ValidFrom",
+				"type": "datetime2",
+				"scale": 7
+			},
+			{
+				"name": "ValidTo",
+				"type": "datetime2",
+				"scale": 7
+			},
+			{
+				"name": "ingestTime",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "Application",
+			"table": "PaymentMethods"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
